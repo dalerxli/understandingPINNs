@@ -267,7 +267,7 @@ def compute_metrics_NN(nn, h, diagdist, xshort, yshort, xlong, ylong, eval_len, 
         results_start = np.asarray(naiveTrajectoryNN(i,h,nn,N=steps))
         time_within_naive += time.time()-starttime
         MSE_within_naive += MSE(long_groundtruth[count,1,:,:steps], results_start[1,:,:], diagdist)
-	starttime = time.time()
+        starttime = time.time()
         results_start = np.asarray(gen_one_trajNNH_autograd(eval_len,i,h,model=nn,device=device)) 
         time_within_leapfrog += time.time()-starttime
         MSE_within_leapfrog += MSE(long_groundtruth[count,1,:,:steps], results_start[1,:,:], diagdist)
