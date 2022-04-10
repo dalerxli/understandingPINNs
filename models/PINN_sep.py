@@ -349,6 +349,10 @@ def compute_metrics_sepNN(nn, device, h, diagdist, xshort, yshort, xlong, ylong,
       results_start = np.asarray(naiveTrajectoryNNH_autograd(i,h,model=nn,device=device,N=eval_len,))
       time_long_naive += time.time()-starttime
       MSE_long_naive += MSE(long_groundtruth[count,1,:,:], results_start[1,:,:], diagdist)
+      starttime = time.time()
+      results_start = np.asarray(gen_one_trajNNH_autograd(eval_len,i,h,model=nn,device=device,))
+      time_long_leapfrog += time.time()-starttime
+      MSE_long_leapfrog += MSE(long_groundtruth[count,1,:,:], results_start[1,:,:], diagdist)
       steps = int(len_within[count-1])
       supp = (len_within>0).sum()
       if steps == 0:
@@ -362,6 +366,10 @@ def compute_metrics_sepNN(nn, device, h, diagdist, xshort, yshort, xlong, ylong,
         results_start = np.asarray(naiveTrajectoryNNH_autograd(i,h,model=nn,device=device,N=steps,))
         time_within_naive += time.time()-starttime
         MSE_within_naive += MSE(long_groundtruth[count,1,:,:steps], results_start[1,:,:], diagdist)
+	starttime = time.time()
+        results_start = np.asarray(gen_one_trajNNH_autograd(eval_len,i,h,model=nn,device=device)) 
+        time_within_leapfrog += time.time()-starttime
+        MSE_within_leapfrog += MSE(long_groundtruth[count,1,:,:steps], results_start[1,:,:], diagdist)
       count+=1 
     count = 1
     for i in tqdm(np.expand_dims(np.c_[np.ravel(xshort),np.ravel(yshort)],2)):
@@ -370,9 +378,17 @@ def compute_metrics_sepNN(nn, device, h, diagdist, xshort, yshort, xlong, ylong,
       time_onestep += time.time()-starttime
       MSE_onestep += MSE(len_short[count,1,:,:], results_start[1,:,:], diagdist)
       starttime = time.time()
+      results_start = np.asarray(gen_one_trajNNH_autograd(1, i,h,model=nn,device=device)) 
+      time_onestep_leapfrog += time.time()-starttime
+      MSE_onestep_leapfrog += MSE(len_short[count,1,:,:], results_start[1,:,:], diagdist)    
+      starttime = time.time()
+      results_start = np.asarray(naiveTrajectoryNNH_autograd(i,h,model=nn,device=device,N=1,))
+      time_onestep_naive += time.time()-starttime
+      MSE_onestep_naive += MSE(len_short[count,1,:,:], results_start[1,:,:], diagdist)  
+      starttime = time.time()
       dH = get_grad(nn, i,device)
       vectorfield = np.asarray([dH[0],dH[1]])
       time_vectorfield += time.time()-starttime
       MSE_vectorfield += MSE(truevector(len_short[count,0,:,:].flatten()), vectorfield, diagdist)
       count+=1
-    return MSE_long/25, time_long, MSE_long_naive/25, time_long_naive, MSE_within/supp, time_within, MSE_within_naive/supp, time_within_naive, MSE_onestep/400, time_onestep, MSE_vectorfield/400, time_vectorfield/400, withinspace_longtraj_symplectic_MSe, withinspace_longtraj_naive_MSe
+    return MSE_long/25, time_long, MSE_long_naive/25, time_long_naive, MSE_within/supp, time_within, MSE_within_naive/supp, time_within_naive, MSE_onestep/400, time_onestep, MSE_vectorfield/400, time_vectorfield/400, withinspace_longtraj_symplectic_MSe, withinspace_longtraj_naive_MSe, MSE_long_leapfrog/25, time_long_leapfrog, MSE_within_leapfrog/supp, time_within_leapfrog, MSE_onestep_leapfrog/400, time_onestep_leapfrog, MSE_onestep_naive/400, time_onestep_naive, 
