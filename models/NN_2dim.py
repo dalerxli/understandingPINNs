@@ -63,7 +63,7 @@ def naiveTrajectoryNN(z,h,net,N=1):
     trj[:,j+1] = naiveIntNN(trj[:,j].copy(),h,net)
   return trj[:, :-1], trj[:, 1:]
 
-def LeapfrogNNH_autograd(z,h,model,device):
+def LeapfrogNNH_autograd(z,h,model):
 ## classical Leapfrog scheme for force field f
 # can compute multiple initial values simultanously, z[k]=list of k-component of all initial values
 	dim = int(len(z)/2)
@@ -72,13 +72,13 @@ def LeapfrogNNH_autograd(z,h,model,device):
 	z[dim:] = z[dim:]+h/2*torch.squeeze(model(torch.tensor(z).float()),0).detach().numpy().transpose()[1]
 	return z
   
-def gen_one_trajNNH_autograd(traj_len,start,h,model,device,n_h = 800):
+def gen_one_trajNNH_autograd(traj_len,start,h,model,n_h = 800):
   h_gen = h/n_h
   x, final = start.copy(), start.copy()
   for i in range(traj_len):
     start=np.hstack((start,x))
     for j in range(0,int(n_h)):
-      x=LeapfrogNNH_autograd(x,h_gen,model,device)
+      x=LeapfrogNNH_autograd(x,h_gen,model)
     final=np.hstack((final,x))
   return start[:,1:],final[:,1:]
 
@@ -251,7 +251,7 @@ def compute_metrics_NN(nn, h, diagdist, xshort, yshort, xlong, ylong, eval_len, 
       time_long_naive += time.time()-starttime
       MSE_long_naive += MSE(long_groundtruth[count,1,:,:], results_start[1,:,:], diagdist)
       starttime = time.time()
-      results_start = np.asarray(gen_one_trajNNH_autograd(eval_len,i,h,model=nn,device=device,))
+      results_start = np.asarray(gen_one_trajNNH_autograd(eval_len,i,h,model=nn))
       time_long_leapfrog += time.time()-starttime
       MSE_long_leapfrog += MSE(long_groundtruth[count,1,:,:], results_start[1,:,:], diagdist)
       steps = int(len_within[count-1])
@@ -268,7 +268,7 @@ def compute_metrics_NN(nn, h, diagdist, xshort, yshort, xlong, ylong, eval_len, 
         time_within_naive += time.time()-starttime
         MSE_within_naive += MSE(long_groundtruth[count,1,:,:steps], results_start[1,:,:], diagdist)
         starttime = time.time()
-        results_start = np.asarray(gen_one_trajNNH_autograd(eval_len,i,h,model=nn,device=device)) 
+        results_start = np.asarray(gen_one_trajNNH_autograd(eval_len,i,h,model=nn)) 
         time_within_leapfrog += time.time()-starttime
         MSE_within_leapfrog += MSE(long_groundtruth[count,1,:,:steps], results_start[1,:,:], diagdist)
       count+=1 
@@ -279,7 +279,7 @@ def compute_metrics_NN(nn, h, diagdist, xshort, yshort, xlong, ylong, eval_len, 
       time_onestep += time.time()-starttime
       MSE_onestep += MSE(len_short[count,1,:,:], results_start[1,:,:], diagdist)
       starttime = time.time()
-      results_start = np.asarray(gen_one_trajNNH_autograd(1, i,h,model=nn,device=device)) 
+      results_start = np.asarray(gen_one_trajNNH_autograd(1, i,h,model=nn)) 
       time_onestep_leapfrog += time.time()-starttime
       MSE_onestep_leapfrog += MSE(len_short[count,1,:,:], results_start[1,:,:], diagdist)    
       starttime = time.time()
