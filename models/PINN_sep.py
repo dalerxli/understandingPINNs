@@ -342,7 +342,7 @@ def LeapfrogNNH_autograd(z,h,model,device):
 	z[dim:] = z[dim:]+h/2*get_grad(model, z,device)[1]
 	return z
   
-def gen_one_trajNNH_autograd(traj_len,start,h,model,device,n_h = 800):
+def gen_one_trajNNH_autograd(traj_len,start,h,model,device,n_h = 100):
   h_gen = h/n_h
   x, final = start.copy(), start.copy()
   for i in range(traj_len):
