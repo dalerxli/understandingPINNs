@@ -219,7 +219,7 @@ def compute_metrics_NN(nn, h, diagdist, xshort, yshort, xlong, ylong, eval_len, 
     results_start = np.asarray(naiveTrajectoryNN(np.asarray([[0.4],[0.]]),h,nn,N=eval_len))
     withinspace_longtraj_naive_MSe = MSE(long_groundtruth[0,1,:,:], results_start[1,:,:], diagdist)
 
-    MSE_long, time_long, MSE_long_naive, time_long_naive, MSE_within, time_within, MSE_within_naive, time_within_naive, MSE_onestep, time_onestep, MSE_vectorfield, time_vectorfield = 0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.
+    MSE_long, time_long, MSE_long_naive, time_long_naive, MSE_within, time_within, MSE_within_naive, time_within_naive, MSE_onestep, time_onestep, MSE_vectorfield, time_vectorfield, MSE_long_leapfrog, time_long_leapfrog, MSE_within_leapfrog, time_within_leapfrog, MSE_onestep_leapfrog, time_onestep_leapfrog, MSE_onestep_naive, time_onestep_naive = 0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.
     count = 1
     for i in tqdm(np.expand_dims(np.c_[np.ravel(xlong),np.ravel(ylong)],2)):
       starttime = time.time()
