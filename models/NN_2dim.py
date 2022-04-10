@@ -67,9 +67,9 @@ def LeapfrogNNH_autograd(z,h,model):
 ## classical Leapfrog scheme for force field f
 # can compute multiple initial values simultanously, z[k]=list of k-component of all initial values
 	dim = int(len(z)/2)
-	z[dim:] = z[dim:]+h/2*torch.squeeze(model(torch.tensor(z).float()),0).detach().numpy().transpose()[1]
+	z[dim:] = z[dim:]+h/2*torch.squeeze(model(torch.tensor(z).transpose(1,0).float()),0).detach().numpy().transpose()[1]
 	z[:dim] = z[:dim]+h*z[dim:]
-	z[dim:] = z[dim:]+h/2*torch.squeeze(model(torch.tensor(z).float()),0).detach().numpy().transpose()[1]
+	z[dim:] = z[dim:]+h/2*torch.squeeze(model(torch.tensor(z).transpose(1,0).float()),0).detach().numpy().transpose()[1]
 	return z
   
 def gen_one_trajNNH_autograd(traj_len,start,h,model,n_h = 800):
@@ -215,23 +215,23 @@ def train(net, wholemat, evalmat, optimizer, batchsize=10, iter=1600, ):
     print('Finished Training')
     return net
 
-def classicqbarpbar(z,h,net):
-		dim = int(len(z)/2)		
-		qbar = torch.squeeze(net(torch.tensor(z).float()),0).detach().numpy().transpose()[:dim]
-		pbar = torch.squeeze(net(torch.tensor(z).float()),0).detach().numpy().transpose()[dim:]
-		return np.block([qbar,pbar])
+# def classicqbarpbar(z,h,net):
+# 		dim = int(len(z)/2)		
+# 		qbar = torch.squeeze(net(torch.tensor(z).float()),0).detach().numpy().transpose()[:dim]
+# 		pbar = torch.squeeze(net(torch.tensor(z).float()),0).detach().numpy().transpose()[dim:]
+# 		return np.block([qbar,pbar])
 
-def classicTrajectorybar(z,h,net,N=1):
-	## trajectory computed with classicInt
-  z = z.reshape(1,-1)[0]
-  trj = np.zeros((len(z),N+2))
-  trj[:,0] = z.copy()
-  if N == 1:
-    return z.reshape(-1,1), classicqbarpbar(trj[:,0],h,net).reshape(-1,1)
-  else:
-    for j in tqdm(range(0,N+1)):
-      trj[:,j+1] = classicqbarpbar(trj[:,j].copy(),h,net)
-  return trj[:, :-1], trj[:, 1:]
+# def classicTrajectorybar(z,h,net,N=1):
+# 	## trajectory computed with classicInt
+#   z = z.reshape(1,-1)[0]
+#   trj = np.zeros((len(z),N+2))
+#   trj[:,0] = z.copy()
+#   if N == 1:
+#     return z.reshape(-1,1), classicqbarpbar(trj[:,0],h,net).reshape(-1,1)
+#   else:
+#     for j in tqdm(range(0,N+1)):
+#       trj[:,j+1] = classicqbarpbar(trj[:,j].copy(),h,net)
+#   return trj[:, :-1], trj[:, 1:]
     
 def compute_metrics_NN(nn, h, diagdist, xshort, yshort, xlong, ylong, eval_len, len_within, long_groundtruth, len_short, truevector):
     results_start = np.asarray(classicTrajectoryNN(np.asarray([[0.4],[0.]]),h,nn,N=eval_len)) 
