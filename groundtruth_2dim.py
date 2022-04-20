@@ -42,11 +42,11 @@ def CreateTrainingDataTrajClassicInt(traj_len,ini_con,spacedim,h,f1,f2,n_h = 800
   startcon = np.array(halton.generate(space, ini_con)).transpose()
   finalcon = startcon.copy()
   # Compute flow map from Halton sequence to generate learning data
-  if ini_con==1: return classicTrajectory(startcon,f1,f2,h,N=traj_len)
+  if ini_con==1: return classicTrajectory(startcon,f1,f2,h,traj_len,n_h)
   else:
-    start, final= classicTrajectory(np.squeeze(startcon[:,0]),f1,f2,h,N=traj_len)
+    start, final= classicTrajectory(np.squeeze(startcon[:,0]),f1,f2,h,traj_len,n_h)
     for k in range(ini_con-1):
-      new_start, new_final = classicTrajectory(np.squeeze(startcon[:,k+1]),f1,f2,h,N=traj_len)
+      new_start, new_final = classicTrajectory(np.squeeze(startcon[:,k+1]),f1,f2,h,traj_len,n_h)
       start = np.hstack((start, new_start))
       final = np.hstack((final, new_final))
   return start,final
@@ -59,11 +59,11 @@ def CreateTrainingDataTrajClassicIntRandom(traj_len,ini_con,spacedim,h,f1,f2,see
   h_gen = h/n_h
   finalcon = startcon.copy()
   # Compute flow map from Halton sequence to generate learning data
-  if ini_con==1: return classicTrajectory(startcon,f1,f2,h,N=traj_len)
+  if ini_con==1: return classicTrajectory(startcon,f1,f2,h,traj_len,n_h)
   else:
-    start, final= classicTrajectory(np.squeeze(startcon[:,0]),f1,f2,h,N=traj_len)
+    start, final= classicTrajectory(np.squeeze(startcon[:,0]),f1,f2,h,traj_len,n_h)
     for k in range(ini_con-1):
-      new_start, new_final = classicTrajectory(np.squeeze(startcon[:,k+1]),f1,f2,h,N=traj_len)
+      new_start, new_final = classicTrajectory(np.squeeze(startcon[:,k+1]),f1,f2,h,traj_len,n_h)
       start = np.hstack((start, new_start))
       final = np.hstack((final, new_final))
   return start,final
