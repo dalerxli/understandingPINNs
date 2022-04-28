@@ -71,7 +71,7 @@ def LeapfrogTrajectory(z,f1,f2,h,N=10,n_h=100):
       trj[:,i+1] = classicLeapfrog(trj[:,i].copy(),f1,f2,h_gen)
   return trj[:, :-1], trj[:, 1:]
 
-def CreateTrainingDataTrajSympEuler(traj_len,ini_con,spacedim,h,f1,f2,seed,n_h = 800,maxiters=100):
+def CreateTrainingDataTrajLeapfrog(traj_len,ini_con,spacedim,h,f1,f2,seed,n_h = 800,maxiters=100):
   np.random.seed(seed = seed)
   startcon = np.random.uniform(spacedim[0][0], spacedim[0][1], size = ini_con)
   for i in range(len(spacedim)-1):
