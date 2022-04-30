@@ -72,6 +72,9 @@ class sepNet(nn.Module):
         self.output_layer = nn.Linear( hidden_size2*2, output_size*2 , bias=True)
         with torch.no_grad():
             self.output_layer.weight.mul_(self.mask3)
+        prune.custom_from_mask(self.hidden_layer_1, name='weight', mask=self.mask1)
+        prune.custom_from_mask(self.hidden_layer_2, name='weight', mask=self.mask2)
+        prune.custom_from_mask(self.output_layer, name='weight', mask=self.mask3)
         
     def forward(self, x):
         x = softplus(self.hidden_layer_1(x)) # F.relu(self.hidden_layer_1(x)) # 
