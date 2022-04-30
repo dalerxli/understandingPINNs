@@ -31,27 +31,27 @@ def softplus(x):
 from sklearn.model_selection import train_test_split
 
 
-class sepNet(nn.Module):
+# class sepNet(nn.Module):
 
-    def __init__(self, input_size, hidden_size1, hidden_size2, output_size):
-        super(sepNet , self).__init__()
-        self.hidden_layer_1A = nn.Linear( int(input_size/2), hidden_size1, bias=True)
-        self.hidden_layer_2A = nn.Linear( hidden_size1, hidden_size2, bias=True)
-        self.hidden_layer_1B = nn.Linear( int(input_size/2), hidden_size1, bias=True)
-        self.hidden_layer_2B = nn.Linear( hidden_size1, hidden_size2, bias=True)
-        self.output_layerA = nn.Linear( hidden_size2, output_size , bias=True)
-        self.output_layerB = nn.Linear( hidden_size2, output_size , bias=True)
+#     def __init__(self, input_size, hidden_size1, hidden_size2, output_size):
+#         super(sepNet , self).__init__()
+#         self.hidden_layer_1A = nn.Linear( int(input_size/2), hidden_size1, bias=True)
+#         self.hidden_layer_2A = nn.Linear( hidden_size1, hidden_size2, bias=True)
+#         self.hidden_layer_1B = nn.Linear( int(input_size/2), hidden_size1, bias=True)
+#         self.hidden_layer_2B = nn.Linear( hidden_size1, hidden_size2, bias=True)
+#         self.output_layerA = nn.Linear( hidden_size2, output_size , bias=True)
+#         self.output_layerB = nn.Linear( hidden_size2, output_size , bias=True)
         
-    def forward(self, x):
-        x1,x2 = torch.unsqueeze(x[:,0],1),torch.unsqueeze(x[:,1],1)
-        x1 = softplus(self.hidden_layer_1A(x1)) # F.relu(self.hidden_layer_1(x)) # 
-        x2 = softplus(self.hidden_layer_1B(x2)) # F.relu(self.hidden_layer_1(x)) # 
-        x1 = softplus(self.hidden_layer_2A(x1)) # F.relu(self.hidden_layer_2(x)) # 
-        x2 = softplus(self.hidden_layer_2B(x2)) # F.relu(self.hidden_layer_2(x)) # 
-        x1 = self.output_layerA(x1)
-        x2 = self.output_layerB(x2)
-        x = torch.add(x1, x2)
-        return x
+#     def forward(self, x):
+#         x1,x2 = torch.unsqueeze(x[:,0],1),torch.unsqueeze(x[:,1],1)
+#         x1 = softplus(self.hidden_layer_1A(x1)) # F.relu(self.hidden_layer_1(x)) # 
+#         x2 = softplus(self.hidden_layer_1B(x2)) # F.relu(self.hidden_layer_1(x)) # 
+#         x1 = softplus(self.hidden_layer_2A(x1)) # F.relu(self.hidden_layer_2(x)) # 
+#         x2 = softplus(self.hidden_layer_2B(x2)) # F.relu(self.hidden_layer_2(x)) # 
+#         x1 = self.output_layerA(x1)
+#         x2 = self.output_layerB(x2)
+#         x = torch.add(x1, x2)
+#         return x
 
 class sepNet(nn.Module):
 
