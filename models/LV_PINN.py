@@ -3,6 +3,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
 import torch.utils.data as Data
+import torch.nn.utils.prune as prune
 import numpy as np
 import os
 import time
