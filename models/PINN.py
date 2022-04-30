@@ -5,10 +5,10 @@ import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
 import torch.utils.data as Data
+import torch.nn.utils.prune as prune
 import numpy as np
 import os
 import time
-from ..metrics import MSE
 from tqdm import tqdm
 
 # define model
@@ -18,6 +18,37 @@ def softplus(x):
 from sklearn.model_selection import train_test_split
 
 
+class sepNet(nn.Module):
+
+    def __init__(self, input_size, hidden_size1, hidden_size2, output_size):
+        super(sepNet , self).__init__()
+        self.mask1 = torch.cat((torch.squeeze(torch.cat((torch.ones((1,int(input_size/2))),torch.zeros((1,int(input_size/2)))),1),0).repeat(int(hidden_size1),1),
+            torch.squeeze(torch.cat((torch.zeros((1,int(input_size/2))),torch.ones((1,int(input_size/2)))),1),0).repeat(int(hidden_size1),1)),0)
+        self.mask2 = torch.cat((torch.squeeze(torch.cat((torch.ones((1,int(hidden_size1))),torch.zeros((1,int(hidden_size1)))),1),0).repeat(int(hidden_size2),1),
+                    torch.squeeze(torch.cat((torch.zeros((1,int(hidden_size1))),torch.ones((1,int(hidden_size1)))),1),0).repeat(int(hidden_size2),1)),0)
+        self.mask3 = torch.cat((torch.squeeze(torch.cat((torch.ones((1,int(hidden_size2))),torch.zeros((1,int(hidden_size2)))),1),0).repeat(int(output_size),1),
+                    torch.squeeze(torch.cat((torch.zeros((1,int(hidden_size2))),torch.ones((1,int(hidden_size2)))),1),0).repeat(int(output_size),1)),0)
+        self.hidden_layer_1 = nn.Linear( input_size, hidden_size1*2, bias=True)
+        with torch.no_grad():
+            self.hidden_layer_1.weight.mul_(self.mask1)
+        self.hidden_layer_2 = nn.Linear( hidden_size1*2, hidden_size2*2, bias=True)
+        with torch.no_grad():
+            self.hidden_layer_2.weight.mul_(self.mask2)
+        self.output_layer = nn.Linear( hidden_size2*2, output_size*2 , bias=True)
+        with torch.no_grad():
+            self.output_layer.weight.mul_(self.mask3)
+        prune.custom_from_mask(self.hidden_layer_1, name='weight', mask=self.mask1)
+        prune.custom_from_mask(self.hidden_layer_2, name='weight', mask=self.mask2)
+        prune.custom_from_mask(self.output_layer, name='weight', mask=self.mask3)
+        
+    def forward(self, x):
+        x = softplus(self.hidden_layer_1(x)) # F.relu(self.hidden_layer_1(x)) # 
+        x = softplus(self.hidden_layer_2(x)) # F.relu(self.hidden_layer_2(x)) # 
+        x = self.output_layer(x)
+        x = torch.sum(x)
+        return x
+
+# PINN
 class Net(nn.Module):
 
     def __init__(self, input_size, hidden_size, output_size):
@@ -32,7 +63,6 @@ class Net(nn.Module):
         x = self.output_layer(x)
 
         return x
-
 # calculate loss
 def lossfuc(model,mat,x,y,device,x0,H0,dim,c1,c2,c3,c4,verbose=False):
     if dim ==2:
@@ -269,7 +299,7 @@ def train(net,bs,num_epoch,initial_conditions,device,wholemat,evalmat,x0,H0,dim,
             break
             
     net=torch.load('checkpoint.pt')
-    return net,avg_vallosses,avg_lossli,avg_f1li,avg_f2li,avg_f3li,avg_f4li
+    return net,epoch,avg_vallosses,avg_lossli,avg_f1li,avg_f2li,avg_f3li,avg_f4li
 
 def get_grad(model, z,device):
 		inputs=Variable(torch.tensor([z[0][0],z[1][0]]), requires_grad = True).to(device)
