@@ -56,7 +56,7 @@ from sklearn.model_selection import train_test_split
 class sepNet(nn.Module):
 
     def __init__(self, input_size, hidden_size1, hidden_size2, output_size):
-        super(sepNet2 , self).__init__()
+        super(sepNet , self).__init__()
         self.mask1 = torch.cat((torch.squeeze(torch.cat((torch.ones((1,int(input_size/2))),torch.zeros((1,int(input_size/2)))),1),0).repeat(int(hidden_size1),1),
             torch.squeeze(torch.cat((torch.zeros((1,int(input_size/2))),torch.ones((1,int(input_size/2)))),1),0).repeat(int(hidden_size1),1)),0)
         self.mask2 = torch.cat((torch.squeeze(torch.cat((torch.ones((1,int(hidden_size1))),torch.zeros((1,int(hidden_size1)))),1),0).repeat(int(hidden_size2),1),
