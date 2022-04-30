@@ -64,39 +64,23 @@ class Net(nn.Module):
 
         return x
 # calculate loss
-def lossfuc(model,mat,x,y,device,x0,H0,dim,c1,c2,c3,c4,verbose=False):
-    if dim ==2:
-      f3=(model(torch.tensor([[x0,x0]]).to(device))-torch.tensor([[H0]]).to(device))**2
-      dH=torch.autograd.grad(y, x, grad_outputs=y.data.new(y.shape).fill_(1),create_graph=True)[0]
-      dHdq=dH[:,0]
-      dHdp=dH[:,1]
-      qprime=(mat[:,2])
-      pprime=(mat[:,3])
-      f1=torch.mean((dHdp-qprime)**2,dim=0)
-      f2=torch.mean((dHdq+pprime)**2,dim=0)
-      f4=torch.mean((dHdq*qprime+dHdp*pprime)**2,dim=0)
-      loss=torch.mean(c1*f1+c2*f2+c3*f3+c4*f4)
-      meanf1,meanf2,meanf3,meanf4=torch.mean(c1*f1),torch.mean(c2*f2),torch.mean(c3*f3),torch.mean(c4*f4)
-      if verbose:
-        print(x)
-        print(meanf1,meanf2,meanf3,meanf4)
-        print(loss,meanf1,meanf2,meanf3,meanf4)
-      return loss,meanf1,meanf2,meanf3,meanf4
-    if dim ==4:
-      f3=(model(torch.tensor([[x0,x0]]).to(device))-torch.tensor([[H]]).to(device))**2
-      dH=torch.autograd.grad(y, x, grad_outputs=y.data.new(y.shape).fill_(1),create_graph=True)[0]
-      dHdq1,dHdq2,dHdp1,dHdp2=dH[:,0],dH[:,1],dH[:,2],dH[:,3]
-      q1prime,q2prime,p1prime,p2prime=(mat[:,4]),(mat[:,5]),(mat[:,6]),(mat[:,7])
-      f1=torch.mean((dHdp1-q1prime)**2,dim=1)+torch.mean((dHdp2-q2prime)**2,dim=1)
-      f2=torch.mean((dHdq1+p1prime)**2,dim=1)+torch.mean((dHdq2+p2prime)**2,dim=1)
-      f4=torch.mean((dHdq1*q1prime+dHdp1*p1prime)**2,dim=1)+torch.mean((dHdq2*q2prime+dHdp2*p2prime)**2,dim=1)
-      loss=torch.mean(c1*f1+c2*f2+c3*f3+c4*f4)
-      meanf1,meanf2,meanf3,meanf4=torch.mean(c1*f1),torch.mean(c2*f2),torch.mean(c3*f3),torch.mean(c4*f4)
-      if verbose:
-        print(x)
-        print(meanf1,meanf2,meanf3,meanf4)
-        print(loss,meanf1,meanf2,meanf3,meanf4)
-      return loss,meanf1,meanf2,meanf3,meanf4
+def lossfuc(model,mat,x,y,device,x0,H0,dim,c1=1,c2=1,c3=1,c4=1,verbose=False):
+    f3=(model(torch.tensor([[x0,x0]]).to(device))-torch.tensor([[H0]]).to(device))**2
+    dH=torch.autograd.grad(y, x, grad_outputs=y.data.new(y.shape).fill_(1),create_graph=True, allow_unused=True)[0]
+    dHdq=dH[:,0]
+    dHdp=dH[:,1]
+    qprime=(mat[:,2])
+    pprime=(mat[:,3])
+    f1=torch.mean((dHdp-qprime)**2,dim=0)
+    f2=torch.mean((dHdq+pprime)**2,dim=0)
+    f4=torch.mean((dHdq*qprime+dHdp*pprime)**2,dim=0)
+    loss=torch.mean(c1*f1+c2*f2+c3*f3+c4*f4)
+    meanf1,meanf2,meanf3,meanf4=torch.mean(c1*f1),torch.mean(c2*f2),torch.mean(c3*f3),torch.mean(c4*f4)
+    if verbose:
+      print(x)
+      print(meanf1,meanf2,meanf3,meanf4)
+      print(loss,meanf1,meanf2,meanf3,meanf4)
+    return loss,meanf1,meanf2,meanf3,meanf4
 
 
 def data_preprocessing(start_train, final_train,device):       
