@@ -312,7 +312,7 @@ def train(net,bs,num_epoch,initial_conditions,device,wholemat,evalmat,x0,H0,dim,
             break
             
     net=torch.load('checkpoint.pt')
-    return net,avg_vallosses,avg_lossli,avg_f1li,avg_f2li,avg_f3li,avg_f4li
+    return net,epoch,avg_vallosses,avg_lossli,avg_f1li,avg_f2li,avg_f3li,avg_f4li
     
 def lossfuc(model,mat,x,y,device,x0,H0,dim,c1=1,c2=1,c3=1,c4=1,verbose=False):
     f3=(model(torch.tensor([[x0,x0]]).to(device))-torch.tensor([[H0]]).to(device))**2
