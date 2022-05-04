@@ -10,6 +10,7 @@ import numpy as np
 import os
 import time
 from tqdm import tqdm
+import math
 
 # define model
 def softplus(x):
@@ -18,35 +19,79 @@ def softplus(x):
 from sklearn.model_selection import train_test_split
 
 
+# class sepNet(nn.Module):
+
+#     def __init__(self, input_size, hidden_size1, hidden_size2, output_size):
+#         super(sepNet , self).__init__()
+#         self.mask1 = torch.cat((torch.squeeze(torch.cat((torch.ones((1,int(input_size/2))),torch.zeros((1,int(input_size/2)))),1),0).repeat(int(hidden_size1),1),
+#             torch.squeeze(torch.cat((torch.zeros((1,int(input_size/2))),torch.ones((1,int(input_size/2)))),1),0).repeat(int(hidden_size1),1)),0)
+#         self.mask2 = torch.cat((torch.squeeze(torch.cat((torch.ones((1,int(hidden_size1))),torch.zeros((1,int(hidden_size1)))),1),0).repeat(int(hidden_size2),1),
+#                     torch.squeeze(torch.cat((torch.zeros((1,int(hidden_size1))),torch.ones((1,int(hidden_size1)))),1),0).repeat(int(hidden_size2),1)),0)
+#         self.mask3 = torch.cat((torch.squeeze(torch.cat((torch.ones((1,int(hidden_size2))),torch.zeros((1,int(hidden_size2)))),1),0).repeat(int(output_size),1),
+#                     torch.squeeze(torch.cat((torch.zeros((1,int(hidden_size2))),torch.ones((1,int(hidden_size2)))),1),0).repeat(int(output_size),1)),0)
+#         self.hidden_layer_1 = nn.Linear( input_size, hidden_size1*2, bias=True)
+#         with torch.no_grad():
+#             self.hidden_layer_1.weight.mul_(self.mask1)
+#         self.hidden_layer_2 = nn.Linear( hidden_size1*2, hidden_size2*2, bias=True)
+#         with torch.no_grad():
+#             self.hidden_layer_2.weight.mul_(self.mask2)
+#         self.output_layer = nn.Linear( hidden_size2*2, output_size*2 , bias=True)
+#         with torch.no_grad():
+#             self.output_layer.weight.mul_(self.mask3)
+#         prune.custom_from_mask(self.hidden_layer_1, name='weight', mask=self.mask1)
+#         prune.custom_from_mask(self.hidden_layer_2, name='weight', mask=self.mask2)
+#         prune.custom_from_mask(self.output_layer, name='weight', mask=self.mask3)
+        
+#     def forward(self, x):
+#         x = softplus(self.hidden_layer_1(x)) # F.relu(self.hidden_layer_1(x)) # 
+#         x = softplus(self.hidden_layer_2(x)) # F.relu(self.hidden_layer_2(x)) # 
+#         x = self.output_layer(x)
+#         x = torch.sum(x)
+#         return x
+
+class splitBalancedLinear(nn.Module):
+
+    def __init__(self, input_size, output_size):
+        # output_size is the size of one of the two parallel networks
+        super(splitBalancedLinear , self).__init__()
+        self.input_size, self.output_size = input_size, output_size
+        weights = torch.Tensor(2,self.input_size,self.output_size)
+        self.weights = nn.Parameter(weights)
+        bias = torch.Tensor(2,1,self.output_size)
+        self.bias = nn.Parameter(bias)
+
+        # initialise weights and bias
+        nn.init.kaiming_uniform_(self.weights, a=math.sqrt(5)) 
+        fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weights)
+        bound = 1 / math.sqrt(fan_in)
+        nn.init.uniform_(self.bias, -bound, bound)  # bias init
+        
+    def forward(self, x):
+        return torch.add(torch.matmul(x, self.weights), self.bias)
+        # return F.linear(x, self.weights, self.bias)
+
 class sepNet(nn.Module):
 
     def __init__(self, input_size, hidden_size1, hidden_size2, output_size):
         super(sepNet , self).__init__()
-        self.mask1 = torch.cat((torch.squeeze(torch.cat((torch.ones((1,int(input_size/2))),torch.zeros((1,int(input_size/2)))),1),0).repeat(int(hidden_size1),1),
-            torch.squeeze(torch.cat((torch.zeros((1,int(input_size/2))),torch.ones((1,int(input_size/2)))),1),0).repeat(int(hidden_size1),1)),0)
-        self.mask2 = torch.cat((torch.squeeze(torch.cat((torch.ones((1,int(hidden_size1))),torch.zeros((1,int(hidden_size1)))),1),0).repeat(int(hidden_size2),1),
-                    torch.squeeze(torch.cat((torch.zeros((1,int(hidden_size1))),torch.ones((1,int(hidden_size1)))),1),0).repeat(int(hidden_size2),1)),0)
-        self.mask3 = torch.cat((torch.squeeze(torch.cat((torch.ones((1,int(hidden_size2))),torch.zeros((1,int(hidden_size2)))),1),0).repeat(int(output_size),1),
-                    torch.squeeze(torch.cat((torch.zeros((1,int(hidden_size2))),torch.ones((1,int(hidden_size2)))),1),0).repeat(int(output_size),1)),0)
-        self.hidden_layer_1 = nn.Linear( input_size, hidden_size1*2, bias=True)
-        with torch.no_grad():
-            self.hidden_layer_1.weight.mul_(self.mask1)
-        self.hidden_layer_2 = nn.Linear( hidden_size1*2, hidden_size2*2, bias=True)
-        with torch.no_grad():
-            self.hidden_layer_2.weight.mul_(self.mask2)
-        self.output_layer = nn.Linear( hidden_size2*2, output_size*2 , bias=True)
-        with torch.no_grad():
-            self.output_layer.weight.mul_(self.mask3)
-        prune.custom_from_mask(self.hidden_layer_1, name='weight', mask=self.mask1)
-        prune.custom_from_mask(self.hidden_layer_2, name='weight', mask=self.mask2)
-        prune.custom_from_mask(self.output_layer, name='weight', mask=self.mask3)
+        self.hidden_layer_1 = splitBalancedLinear(input_size, hidden_size1)
+        self.hidden_layer_2 = splitBalancedLinear(hidden_size1, hidden_size2)
+        self.output_layer = splitBalancedLinear(hidden_size2, output_size)
         
     def forward(self, x):
-        x = softplus(self.hidden_layer_1(x)) # F.relu(self.hidden_layer_1(x)) # 
-        x = softplus(self.hidden_layer_2(x)) # F.relu(self.hidden_layer_2(x)) # 
+        # print("input", x.shape)
+        x = torch.unsqueeze(torch.unsqueeze(x,-1),-1) #torch.unsqueeze(x.transpose(1,0),-1)
+        # print("initial", x.shape)
+        x = softplus(self.hidden_layer_1(x)) 
+        # print("hl1", x.shape)
+        x = softplus(self.hidden_layer_2(x)) 
+        # print("hl2", x.shape)
         x = self.output_layer(x)
+        # print("output", x.shape)
+        torch.squeeze(x, 0)
         x = torch.sum(x)
         return x
+
 
 # PINN
 class Net(nn.Module):
