@@ -138,10 +138,10 @@ def StormerTrajectory(z,f1,f2,h,N=10,n_h=1,maxiters=100):
 
 def CreateTrainingDataTrajStormer(traj_len,ini_con,spacedim,h,f1,f2,seed,n_h = 800):
   np.random.seed(seed = seed)
-  space = Space(spacedim)
+  startcon = np.random.uniform(spacedim[0][0], spacedim[0][1], size = ini_con)
+  for i in range(len(spacedim)-1):
+    startcon = np.vstack((startcon, np.random.uniform(spacedim[i+1][0], spacedim[i+1][1], size = ini_con)))
   h_gen = h/n_h
-  halton = Halton()
-  startcon = np.array(halton.generate(space, ini_con)).transpose()
   finalcon = startcon.copy()
   # Compute flow map from Halton sequence to generate learning data
   if ini_con==1: return StormerTrajectory(startcon,f1,f2,h,N=traj_len)
