@@ -99,6 +99,60 @@ def get_within_array(trajectories, spacedim):
       within_array = np.append(within_array, len(trajectories[i][1][1]))
   return within_array
 
+def iterator(fstage,dim,maxiters):
+  stageold=np.zeros(dim) 
+  stage = fstage(stageold) +0.
+  Iter = 0
+  while (np.amax(abs(stage - stageold)) > 1e-10 and Iter<maxiters):
+    stageold = stage+0.
+    stage = fstage(stage)+0.
+    Iter = Iter+1
+  return stage
+
+def StormerInt(z,f1,f2,h,maxiters):
+	## classical symplectic Euler scheme
+    dim = int(len(z)/2)
+    x=z[:dim]
+    y=z[dim:]
+    ystage = lambda stg: h/2 * f2(np.block([x, y + stg]))
+    stage=iterator(ystage,dim,maxiters)
+    y=y+stage
+
+    xstage = lambda stg: h/2 * (f1(np.block([x, y]))+f1(np.block([x+stg, y])))
+    stage=iterator(xstage,dim,maxiters)
+    x=x+stage
+    y=y+h/2*f2(np.block([x, y]))
+    return np.block([x,y])
+
+def StormerTrajectory(z,f1,f2,h,N=10,n_h=1,maxiters=100):
+	## trajectory computed with classicInt
+  h_gen = h/n_h
+  z = z.reshape(1,-1)[0]
+  trj = np.zeros((len(z),N+1))
+  trj[:,0] = z.copy()
+
+  for i in range(0,N):
+    for j in range(0,int(n_h)):
+      trj[:,i+1] = StormerInt(trj[:,i].copy(),f1,f2,h_gen,maxiters)
+  return trj[:, :-1], trj[:, 1:]
+
+def CreateTrainingDataTrajStormer(traj_len,ini_con,spacedim,h,f1,f2,seed,n_h = 800):
+  np.random.seed(seed = seed)
+  space = Space(spacedim)
+  h_gen = h/n_h
+  halton = Halton()
+  startcon = np.array(halton.generate(space, ini_con)).transpose()
+  finalcon = startcon.copy()
+  # Compute flow map from Halton sequence to generate learning data
+  if ini_con==1: return StormerTrajectory(startcon,f1,f2,h,N=traj_len)
+  else:
+    start, final= StormerTrajectory(np.squeeze(startcon[:,0]),f1,f2,h,N=traj_len)
+    for k in range(ini_con-1):
+      new_start, new_final = StormerTrajectory(np.squeeze(startcon[:,k+1]),f1,f2,h,N=traj_len)
+      start = np.hstack((start, new_start))
+      final = np.hstack((final, new_final))
+  return start,final
+
 # def CreateTrainingDataTrajClassicInt(traj_len,ini_con,spacedim,h,f1,f2,n_h = 800,maxiters=100):
 #   space = Space(spacedim)
 #   h_gen = h/n_h
