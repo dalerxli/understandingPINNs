@@ -8,6 +8,7 @@ import torch.nn.functional as F
 import torch.utils.data as Data
 import time
 import math
+from tqdm import tqdm
 
 def MSE(arr, groundtruth, diagdist):
   assert arr.shape == groundtruth.shape, ("shape of array is", arr.shape, "shape of groundtruth is", groundtruth.shape)
