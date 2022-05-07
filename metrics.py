@@ -65,7 +65,7 @@ def compute_metrics_PINN(nn, H, device, h, diagdist, xshort, yshort, xlong, ylon
       starttime = time.time()
       results_start = np.asarray(classicTrajectoryNNH_autograd(i,h,model=nn,device=device,N=eval_len)) 
       time_long += time.time()-starttime
-      MSE_long += np.mean(np.square(H(results_start[0])-groundtruth_H))
+      MSE_long += np.mean(np.square(H(results_start[1])-groundtruth_H))
       steps = int(len_within[count-1])
       supp = (len_within>0).sum()
       if steps == 0:
@@ -74,7 +74,7 @@ def compute_metrics_PINN(nn, H, device, h, diagdist, xshort, yshort, xlong, ylon
         starttime = time.time()
         results_start = np.asarray(classicTrajectoryNNH_autograd(i,h,model=nn,device=device,N=steps)) 
         time_within += time.time()-starttime
-        MSE_within += np.mean(np.square(H(results_start[0])-groundtruth_H))
+        MSE_within += np.mean(np.square(H(results_start[1])-groundtruth_H))
       count+=1 
     count = 1
     for i in tqdm(np.expand_dims(np.c_[np.ravel(xshort),np.ravel(yshort)],2)):
@@ -82,6 +82,6 @@ def compute_metrics_PINN(nn, H, device, h, diagdist, xshort, yshort, xlong, ylon
       starttime = time.time()
       results_start = np.asarray(classicTrajectoryNNH_autograd(i,h,model=nn,device=device,N=1)) 
       time_onestep += time.time()-starttime
-      MSE_onestep += np.mean(np.square(H(results_start[0])-groundtruth_H))
+      MSE_onestep += np.mean(np.square(H(results_start[1])-groundtruth_H))
       count+=1
     return MSE_long/25, time_long, MSE_within/supp, time_within, MSE_onestep/400, time_onestep
