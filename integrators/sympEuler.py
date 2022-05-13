@@ -36,7 +36,7 @@ def classicIntNN(z,h,net,device):
 	p = p + h*get_grad(net, np.concatenate([q,p]),device)[1]
 	return np.block([q,p])
 
-def classicTrajectoryNN(z,h,net,N=1,device):
+def classicTrajectoryNN(z,h,net,N,device):
 	## trajectory computed with classicInt
 	z = z.reshape(1,-1)[0]
 	trj = np.zeros((len(z),N+1))
