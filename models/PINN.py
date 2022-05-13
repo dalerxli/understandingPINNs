@@ -112,7 +112,7 @@ class Net(nn.Module):
 class SumNet(nn.Module):
 
     def __init__(self, input_size, hidden_size, output_size):
-        super(Net , self).__init__()
+        super(SumNet , self).__init__()
         self.hidden_layer_1 = nn.Linear( input_size, hidden_size, bias=True)
         self.hidden_layer_2 = nn.Linear( hidden_size, hidden_size, bias=True)
         self.output_layer = nn.Linear( hidden_size, 2 , bias=True)
