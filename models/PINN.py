@@ -108,6 +108,23 @@ class Net(nn.Module):
         x = self.output_layer(x)
 
         return x
+
+class SumNet(nn.Module):
+
+    def __init__(self, input_size, hidden_size, output_size):
+        super(Net , self).__init__()
+        self.hidden_layer_1 = nn.Linear( input_size, hidden_size, bias=True)
+        self.hidden_layer_2 = nn.Linear( hidden_size, hidden_size, bias=True)
+        self.output_layer = nn.Linear( hidden_size, 2 , bias=True)
+        
+    def forward(self, x):
+        x = softplus(self.hidden_layer_1(x)) # F.relu(self.hidden_layer_1(x)) # 
+        x = softplus(self.hidden_layer_2(x)) # F.relu(self.hidden_layer_2(x)) # 
+        x = self.output_layer(x)
+        x = torch.sum(x)
+
+        return x
+
 # calculate loss
 def lossfuc(model,mat,x,y,device,x0,H0,dim,c1=1,c2=1,c3=1,c4=1,verbose=False):
     f3=(model(torch.tensor([[x0,x0]]).to(device))-torch.tensor([[H0]]).to(device))**2
